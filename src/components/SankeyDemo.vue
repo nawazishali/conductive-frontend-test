@@ -1,6 +1,10 @@
 <template>
   <div>
+    <h1>QUIDD Sankey Graph</h1>
     <SankeyGraph v-if="dataProcessed" :graphData="graphData" />
+    <div>
+      <h3>Transactions in Display: {{NumberOfTransactionsInDisplay}}</h3>
+    </div>
   </div>
 </template>
 
@@ -19,6 +23,8 @@ export default {
       graphData: { nodes: [], links: [] },
       jsonData: {},
       dataProcessed: false,
+      NumberOfTransactionsInDisplay: 0,
+      totalQuiddsInDisaply: 0,
       wallets: {
         Mint: "0x0000000000000000000000000000000000000000",
         "Primary Wallet": "0x72571d815dd31fbde52be0b9d7ffc8344aede616",
@@ -31,7 +37,12 @@ export default {
   },
   methods: {
     async convertCSVtoJSON() {
-      this.jsonData = await csvtojson().fromString(csv);
+      try {
+        this.jsonData = await csvtojson().fromString(csv);
+      } catch(e) {
+        console.log('Error while converting CSV to JSON', e);
+        throw e;
+      }
     },
     generateNodes() {
       for (const [key, value] of Object.entries(this.wallets)) {
@@ -50,17 +61,19 @@ export default {
         links.push({
           source: from,
           target: to,
-          value: Number(quantity.split(",").join("")),
+          value: Number(quantity),
         });
       } else {
-        links[linkIndex].value += Number(quantity.split(",").join(""));
+        links[linkIndex].value += Number(quantity);
       }
+      this.NumberOfTransactionsInDisplay++;
     },
     generateLinks() {
       let links = [];
       let HODL = 0;
       this.jsonData.forEach((entry, index) => {
         let { From, To, Quantity } = entry;
+        Quantity = Quantity.split(',').join('');
 
         let isFromMint = From === this.wallets.Mint;
         let isFromPriWallet = From === this.wallets["Primary Wallet"];
@@ -69,7 +82,7 @@ export default {
         let toPancake = To === this.wallets.PancakeSwap;
         let toOtherWallets = !toPriWallet && !toPancake;
 
-        // Possible Transaction conditions to render in graph.
+        // Possible base Transaction conditions to render in graph.
         let baseConditions =
           (isFromMint && toPriWallet) ||
           (isFromPolkstarter && toPriWallet) ||
@@ -77,26 +90,38 @@ export default {
           (isFromPriWallet && toPancake);
 
         if (baseConditions) this.addOrUpdateLink(From, To, Quantity, links);
+
+        // if transactions are going into other wallets then add link for that.
         if (
           (isFromPolkstarter && toOtherWallets) ||
           (isFromPriWallet && toOtherWallets)
         ) {
-          this.addOrUpdateLink(From, this.wallets["Other Wallet"], Quantity, links);
+          this.addOrUpdateLink(
+            From,
+            this.wallets["Other Wallet"],
+            Quantity,
+            links
+          );
         }
+
+        // Count all transactions coming into primary wallet
         if (toPriWallet) {
-          HODL += Number(Quantity.split(",").join(""));
+          HODL += Number(Quantity);
         }
+        // Subtract outgoing transactions from primary wallet
         if (isFromPriWallet) {
           if (toOtherWallets || toPancake) {
-            HODL -= Number(Quantity.split(",").join(""));
+            HODL -= Number(Quantity);
           }
         }
+        // finally create the HODL link when the loop ends.
         if (index === this.jsonData.length - 1) {
-          links.push({
-            source: this.wallets["Primary Wallet"],
-            target: this.wallets.HODL,
-            value: HODL,
-          });
+          this.addOrUpdateLink(
+            this.wallets["Primary Wallet"],
+            this.wallets.HODL,
+            HODL,
+            links
+          );
         }
 
         this.graphData.links = links;
@@ -109,11 +134,11 @@ export default {
       this.generateNodes();
       this.generateLinks();
       this.dataProcessed = true;
-    }
+    },
   },
   async created() {
-    await this.initiateProcess()
-  }
+    await this.initiateProcess();
+  },
 };
 </script>
 
