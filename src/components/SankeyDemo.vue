@@ -33,6 +33,14 @@ export default {
         PancakeSwap: "0xd6d206f59cc5a3bfa4cc10bc8ba140ac37ad1c89",
         Polkastarter: "0xee62650fa45ac0deb1b24ec19f983a8f85b727ab",
       },
+      nodeColors: {
+        Mint: "blue",
+        "Primary Wallet": "yellow",
+        "Other Wallet": "purple",
+        HODL: "green",
+        PancakeSwap: "red",
+        Polkastarter: "royalblue",
+      }
     };
   },
   methods: {
@@ -49,6 +57,7 @@ export default {
         this.graphData.nodes.push({
           node: value,
           name: key,
+          color: this.nodeColors[key]
         });
       }
     },

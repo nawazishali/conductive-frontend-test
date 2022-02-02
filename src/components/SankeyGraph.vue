@@ -20,9 +20,9 @@ export default {
       height = 300 - margin.top - margin.bottom;
 
     // format variables
-    let formatNumber = d3.format(",.0f"), // zero decimal places
-      format = (d) => formatNumber(d),
-      color = d3.scaleOrdinal(d3.schemeCategory10);
+    let formatNumber = d3.format(",.0f"); // zero decimal places
+    let format = (d) => formatNumber(d);
+    //   color = d3.scaleOrdinal(d3.schemeCategory10);
     // append the svg object to the body of this component
     let svg = d3
       .select(this.$refs.sankey)
@@ -74,7 +74,7 @@ export default {
       .attr("y", (d) => d.y0)
       .attr("height", (d) => d.y1 - d.y0)
       .attr("width", sankey.nodeWidth())
-      .style("fill", (d) => (d.color = color(d.name.replace(/ .*/, ""))))
+      .style("fill", (d) => (d.color))
       .style("stroke", (d) => d3.rgb(d.color).darker(2))
       .append("title")
       .text((d) => d.name + "\n" + format(d.value));
