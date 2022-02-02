@@ -55,7 +55,7 @@ export default {
     link
       .append("title")
       .text(
-        (d) => d.source.name + " → " + d.target.name + "\n" + format(d.value)
+        (d) => d.source.name + " → " + d.target.name + "\n" + format(d.value) + "\n$" + format(d.value * 0.6153)
       );
 
     // add in the nodes
@@ -77,7 +77,7 @@ export default {
       .style("fill", (d) => (d.color))
       .style("stroke", (d) => d3.rgb(d.color).darker(2))
       .append("title")
-      .text((d) => d.name + "\n" + format(d.value));
+      .text((d) => d.name + "\n" + format(d.value) + "\n$" + format(d.value * 0.6153))
 
     // add in the title for the nodes
     node
